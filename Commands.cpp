@@ -9,10 +9,12 @@ string BaseCommand::getArgs() {
     return args;
 }
 
+
 PwdCommand::PwdCommand(string args):BaseCommand(args){}; //Constructor
 void PwdCommand::execute(FileSystem &fs) {
     cout<< fs.getWorkingDirectory().getAbsolutePath();
 }
+string PwdCommand::toString() {return "pwd";}
 
 CdCommand::CdCommand(string args):BaseCommand(args) {}; //Constructor
 void CdCommand::execute(FileSystem &fs) {
@@ -141,7 +143,7 @@ bool isPath(string path){
 MkdirCommand::MkdirCommand(string args):BaseCommand(args){};//Constructor
 string MkdirCommand::toString() {return "mkdir";}
 void MkdirCommand::execute(FileSystem &fs) {
-    Directory *savedPwd = fs.getWorkingDirectory();
+    Directory *savedPwd = &fs.getWorkingDirectory();
     string path = getArgs();
     if(path[0] == '/'){
         fs.setWorkingDirectory(&fs.getRootDirectory());
@@ -164,7 +166,7 @@ void MkdirCommand::execute(FileSystem &fs) {
                     fs.setWorkingDirectory(savedPwd);
                     return;
                 }
-                Directory* dir=new Directory(nextDirName, fs.getWorkingDirectory());
+                Directory* dir=new Directory(nextDirName, &fs.getWorkingDirectory());
                 fs.getWorkingDirectory().addFile(dir);
                 fs.setWorkingDirectory(dir);
             } else{
@@ -188,7 +190,7 @@ void MkdirCommand::execute(FileSystem &fs) {
         fs.setWorkingDirectory(savedPwd);
         return;
     }
-    Directory *dir=new Directory(path, fs.getWorkingDirectory());
+    Directory *dir=new Directory(path, &fs.getWorkingDirectory());
     fs.getWorkingDirectory().addFile(dir);
     fs.setWorkingDirectory(savedPwd);
 }
@@ -197,10 +199,10 @@ MkfileCommand::MkfileCommand(string args):BaseCommand(args) {};
 string MkfileCommand::toString() {return "mkfile";};
 void MkfileCommand::execute(FileSystem &fs) {
     string path = getArgs();
-    Directory *pwd = fs.getWorkingDirectory();
+    Directory *pwd = &fs.getWorkingDirectory();
 
     if(path[0]=='/'){
-        pwd=fs.getRootDirectory();
+        pwd=&fs.getRootDirectory();
     }
     while(isPath(path)){
         int split = path.find('/');
@@ -209,10 +211,10 @@ void MkfileCommand::execute(FileSystem &fs) {
             next+=path[i];
         }
         path=path.substr(split+1);
-        if(next = ".."){
+        if(next == ".."){
             pwd=pwd->getParent();
         }else{
-            Directory *f = findChildrenByName(next, pwd);
+            Directory *f = findChildrenByName(next, *pwd);
             if (f==nullptr){
                 cout<<"The system cannot find the path specified"<<endl;
                 return;
@@ -230,8 +232,8 @@ void MkfileCommand::execute(FileSystem &fs) {
         cout<<"Illegal name input"<<endl;
         return;
     }
-    if(nameExists(fname, pwd)){
-       cout<<"File already exists"<endl;
+    if(nameExists(fname, *pwd)){
+       cout<<"File already exists"<<endl;
         return;
     }
     string fsize=path.substr(spaceLoc+1);
