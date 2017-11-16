@@ -195,7 +195,7 @@ void MkdirCommand::execute(FileSystem &fs) {
     fs.setWorkingDirectory(savedPwd);
 }
 
-MkfileCommand::MkfileCommand(string args):BaseCommand(args) {};
+MkfileCommand::MkfileCommand(string args):BaseCommand(args) {};//Constructor
 string MkfileCommand::toString() {return "mkfile";};
 void MkfileCommand::execute(FileSystem &fs) {
     string path = getArgs();
@@ -240,4 +240,209 @@ void MkfileCommand::execute(FileSystem &fs) {
     int size=stoi(fsize);
     File *f = new File(fname, size);
     pwd->addFile(f);
+}
+BaseFile* findFileByName(string name, Directory& pwd){
+    if(pwd.getChildren().size() == 0) {
+        return nullptr;
+    }else {
+        BaseFile *v = pwd.getChildren()[0];
+        for (int i = 0; i < pwd.getChildren().size(); ++i) {
+            if(v[i].getName() == name) {
+                 return &v[i];
+            }
+        }
+        return nullptr;
+    }
+}
+
+CpCommand::CpCommand(string args):BaseCommand(args){};//Constructor
+string CpCommand::toString() {return "cp";}
+void CpCommand::execute(FileSystem &fs) {
+    string path = getArgs();
+    Directory *copySrc = &fs.getWorkingDirectory();
+    Directory *copyDest = copySrc;
+    if(path[0]=='/'){
+        copySrc=&fs.getRootDirectory();
+        path=path.substr(1);
+    }
+    int spaceLoc=path.find(" ");
+    string src = path.substr(0, spaceLoc);
+    string dest = path.substr(spaceLoc+1);
+    if(dest[0]=='/'){
+        copyDest=&fs.getRootDirectory();
+        dest=dest.substr(1);
+    }
+
+    while(isPath(src)){
+        int split = src.find("/");
+        string next = "";
+        for (int i = 0; i < split; ++i) {
+            next+=src[i];
+        }
+        src=src.substr(split+1);
+        if(next == ".."){
+            copySrc=copySrc->getParent();
+        }else{
+            Directory *f = findChildrenByName(next, *copySrc);
+            if(f==nullptr){
+                cout<<"No such file or directory"<<endl;
+                return;
+            }else{
+                copySrc=f;
+            }
+        }
+    }
+    BaseFile *toCopy = findFileByName(src, *copySrc);
+    if(toCopy==nullptr){
+        cout<<"No such file or directory"<<endl;
+        return;
+    }
+    while(isPath(dest)){
+        int split=dest.find("/");
+        string next = "";
+        for (int i = 0; i < split; ++i) {
+            next+=dest[i];
+        }
+        dest=dest.substr(split+1);
+        if(next ==".."){
+            copyDest=copyDest->getParent();
+        }else{
+            Directory *f = findChildrenByName(next, *copyDest);
+            if(f==nullptr){
+                cout<<"No such file or directory"<<endl;
+                return;
+            }else{
+                copyDest=f;
+            }
+        }
+    }
+    Directory* copyTo = findChildrenByName(dest, *copyDest);
+    if(copyTo==nullptr){
+        cout<<"No such file or directory"<<endl;
+        return;
+    }
+    if(nameExists(toCopy->getName(), *copyDest)){
+        return;
+    }
+    BaseFile* copy;
+   /* if (toCopy->typeCheck()) {
+        (Directory *) copy = new Directory &((Directory *) toCopy);
+    } else {
+        (File *) copy = new File &((File *) toCopy);
+    }
+    copyTo->addFile(copy);
+    if(copy->typeCheck()){
+        ((Directory*)copy)->setParent(copyTo);
+    }
+
+    /*
+     * Are the copies needed to be stated "new" shits
+     *
+     */
+}// To test memory usage of copied item!!!!! on heap or on stack!? lost @ scope?
+
+MvCommand::MvCommand(string args):BaseCommand(args) {};//Constructor
+string MvCommand::toString() {return "mv";}
+void MvCommand::execute(FileSystem &fs) {
+    string argument = getArgs();
+    Directory *mvSrc = &fs.getWorkingDirectory();
+    Directory *mvDest = mvSrc;
+    if(argument[0]=='/'){
+        mvSrc=&fs.getRootDirectory();
+        argument=argument.substr(1);
+    }
+    int spaceLoc=argument.find(" ");
+    string src = argument.substr(0, spaceLoc);
+    string dest = argument.substr(spaceLoc+1);
+    if(dest[0]=='/'){
+        mvDest=&fs.getRootDirectory();
+        dest=dest.substr(1);
+    }
+
+    while(isPath(src)){
+        int split = src.find("/");
+        string next = "";
+        for (int i = 0; i < split; ++i) {
+            next+=src[i];
+        }
+        src=src.substr(split+1);
+        if(next == ".."){
+            mvSrc=mvSrc->getParent();
+        }else{
+            Directory *f = findChildrenByName(next, *mvSrc);
+            if(f==nullptr){
+                cout<<"No such file or directory"<<endl;
+                return;
+            }else{
+                mvSrc=f;
+            }
+        }
+    }
+    BaseFile *f = findFileByName(src, *mvSrc);
+    if(f==nullptr){
+        cout<<"No such file or directory"<<endl;
+        return;
+    }
+    if(f->typeCheck()){
+        mvSrc=(Directory*)f;
+    }
+    string mvPath=mvSrc->getAbsolutePath();
+    if(!f->typeCheck()){
+        mvPath+="/"+f->getName();
+    }
+    string pwd=fs.getWorkingDirectory().getAbsolutePath();
+    if(pwd.find(mvPath)==0){
+        cout<<"Can’t move directory"<<endl;
+        return;
+    }
+    if(mvSrc->typeCheck()){
+        mvSrc=mvSrc->getParent();
+    }
+    //f holds basefile to be moved, mvSrc holds its parent
+    while(isPath(dest)){
+        int split=dest.find("/");
+        string next = "";
+        for (int i = 0; i < split; ++i) {
+            next+=dest[i];
+        }
+        dest=dest.substr(split+1);
+        if(next ==".."){
+            mvDest=mvDest->getParent();
+        }else{
+            Directory *f = findChildrenByName(next, *mvDest);
+            if(f==nullptr){
+                cout<<"No such file or directory"<<endl;
+                return;
+            }else{
+                mvDest=f;
+            }
+        }
+    }//mvDest holds destination's parent
+    Directory *destination = findChildrenByName(dest, *mvDest);
+    if(destination== nullptr){
+        cout<<"No such file or directory"<<endl;
+        return;
+    }
+    if(nameExists(f->getName(), *destination)){
+        return;
+    }
+    if(f->typeCheck()){//f is a directory
+        Directory* moved((Directory*)f);
+        moved->setParent(destination);
+        destination->addFile(moved);
+        mvSrc->removeFile(f);//If f was moved correctly: deletes f pointer from its original father. else copied and deleted properly from original father.
+    }else{
+        File* moved((File*)f);
+        destination->addFile(moved);
+        mvSrc->removeFile(f);
+    } // NEED TO FINISH EFFICIENT MOVING:
+    /*
+     * STATUS:
+     * f = the file or folder needed to be moved
+     * mvSrc = f.parent
+     *
+     * destination = last folder, target needs to be moved INSIDE here
+     * mvDest = destination.parent
+     */
+
 }
