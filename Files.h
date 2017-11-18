@@ -50,7 +50,7 @@ private:
 
 public:
 	Directory(string name, Directory *parent); // Constructor
-	~Directory(); // Destructor
+	virtual ~Directory(); // Destructor
 	Directory(const Directory &rhs); //Copy Constructor
 	Directory& operator=(const Directory &rhs); //Copy assignment operator
 	Directory(Directory &&rhs); //Move constructor

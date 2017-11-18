@@ -4,14 +4,12 @@
 
 #include "Files.h"
 #include <algorithm>
-#include <iostream>
+
 
 //BaseFile methods
-BaseFile::BaseFile(string name):name(name){ //Constructor
-    //this->name=name;
-}
-//BaseFile::BaseFile():name("empty"){};
+BaseFile::BaseFile(string name):name(name){} //Constructor
 string BaseFile::getName() const{
+
     return name;
 }
 void BaseFile::setName(string newName){
@@ -63,6 +61,11 @@ void Directory::setParent(Directory *newParent) {
     parent=newParent;
 }
 void Directory::addFile(BaseFile *file) {
+    for(int i=0; i<children.size(); i++){
+        if(children[i]->getName()==file->getName()){
+            return;
+        }
+    }
     children.push_back(file);
     if(file->typeCheck()){
         dynamic_cast<Directory*>(file)->setParent(this);
@@ -72,6 +75,7 @@ void Directory::removeFile(string name) {
     for (int i = 0; i < children.size(); ++i) {
         if(children[i]->getName()==name){
             children[i]->clean();
+            delete children[i];
             children.erase(children.begin()+i);
             break;
         }
@@ -90,11 +94,14 @@ vector<BaseFile*> Directory::getChildren() {
     return children;
 }
 string Directory::getAbsolutePath() {
-    string path="";
+    string path="/";
     Directory* me = this;
-    while(me!=nullptr) {
+    while(me->parent!=nullptr) {
         path = '/' + me->getName() + path;
         me=me->getParent();
+    }
+    if(path.length()>1){
+        path=path.substr(0, path.length()-1);
     }
     return path;
 }
