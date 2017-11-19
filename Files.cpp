@@ -85,6 +85,7 @@ void Directory::removeFile(BaseFile *file) {
     for(int i=0; i<children.size(); i++){
         if(children[i] == file){
             children[i]->clean();
+            delete children[i];
             children.erase(children.begin()+i);
             break;
         }
@@ -122,10 +123,10 @@ void Directory::sortBySize() {
 int Directory::getSize() {
     int sum=0;
     for (int i = 0; i < children.size(); ++i) {
-        if(children[i]->typeCheck()){
+        if(dynamic_cast<Directory*>(children[i])){
             sum=sum+(dynamic_cast<Directory*>(children[i])->getSize());
         }else{
-            sum=sum+dynamic_cast<File*>(children[i])->getSize();
+            sum=sum+(dynamic_cast<File*>(children[i])->getSize());
         }
     }
     return sum;

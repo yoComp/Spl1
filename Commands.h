@@ -101,7 +101,6 @@ public:
 	string toString();
 };
 
-
 class VerboseCommand : public BaseCommand {
 private:
 public:
@@ -121,6 +120,7 @@ public:
 class ExecCommand : public BaseCommand {
 private:
 	const vector<BaseCommand *> & history;
+	bool execCmdCheck(string arg);
 public:
 	ExecCommand(string args, const vector<BaseCommand *> & history);
 	void execute(FileSystem & fs);

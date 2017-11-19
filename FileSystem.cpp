@@ -24,7 +24,7 @@ FileSystem::~FileSystem() {
 } //Destructor
 FileSystem::FileSystem(const FileSystem &rhs) {
     delete rootDirectory;
-    rootDirectory=rhs.rootDirectory;
+    rootDirectory=new Directory(*rhs.rootDirectory);
     workingDirectory=rootDirectory;
 }//Copy constructor
 FileSystem& FileSystem::operator=(const FileSystem &rhs) {
