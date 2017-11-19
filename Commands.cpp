@@ -460,14 +460,37 @@ void MvCommand::execute(FileSystem &fs) {
         cout << "No such file or directory" << endl;
         return;
     } else {
+        if(toMove->typeCheck()){//toMove is a directory
+            string toMoveAbs= dynamic_cast<Directory&>(*toMove).getAbsolutePath();
+            string pwdAbs = fs.getWorkingDirectory().getAbsolutePath();
+            if(pwdAbs.find(toMoveAbs)==0){
+                cout<<"Can’t move directory"<<endl;
+                return;}
+        }else{//toMove is a file
+            string toMoveAbs= src->getAbsolutePath() + "/" + toMove->getName();
+            string pwdAbs = fs.getWorkingDirectory().getAbsolutePath();
+            if(pwdAbs.find(toMoveAbs)==0){
+                cout<<"Can’t move directory"<<endl;
+                return;}
+        }
         if (nameExists(toMove->getName(), dest->getChildren())) {
             cout << "File with given name already exists" << endl;
             return;
         }
         if (toMove->typeCheck()) {//toMove is a directory, deep steal needed
-            Directory dir = (dynamic_cast<Directory &>(*toMove));
-            (&dir)->setParent(dest);
-            dest->addFile(&dir);
+            /*
+            Directory *moved = new Directory(toMove->getName(), dest);
+
+            vector<BaseFile*> v = (dynamic_cast<Directory&>(*toMove).getChildren());
+            for (int i = 0; i < v.size(); ++i) {
+                moved->addFile(v[i]);
+            }
+             */
+
+            Directory *moved = new Directory(dynamic_cast<Directory&>(*toMove));
+            moved->setParent(dest);
+            dest->addFile(moved);
+            src->removeFile(toMove);
         } else {
             File *file = new File(toMove->getName(), toMove->getSize());
             src->removeFile(toMove);
@@ -582,6 +605,11 @@ void RenameCommand::execute(FileSystem &fs) {
     path=path.substr(0,spaceLoc);
     if(path[0] == '/'){
         target=&fs.getRootDirectory();
+        path=path.substr(1);
+    }
+    if(path.length()==0){
+        cout<<"Can't rename root directory"<<endl;
+        return;
     }
     if(path.length()>0) {
         while (isPath(path)) {
@@ -600,7 +628,7 @@ void RenameCommand::execute(FileSystem &fs) {
             }
         }
     }//target = the target file/folder parent
-    BaseFile* file = findFileByName(newName, target->getChildren());
+    BaseFile* file = findFileByName(path, target->getChildren());
     if (file == nullptr){
         cout<<"No such file or directory"<<endl;
         return;}
@@ -621,10 +649,12 @@ string RmCommand::toString() {return "rm";}
 void RmCommand::execute(FileSystem &fs) {
     Directory* savedPwd = &fs.getWorkingDirectory();
     string command = getArgs();
+
     int split = command.find_last_of("/");
 
     string name = command.substr(split+1);
     command=command.substr(0, split);
+
     CdCommand cd(command);
     cd.execute(fs);
 
@@ -632,9 +662,20 @@ void RmCommand::execute(FileSystem &fs) {
     if (target == nullptr){
         cout<<"No such file or Directory"<<endl;
         return;}
-    if(target == savedPwd){
-        cout<<"Can't remove directory"<<endl;
-        return;}
+    if(target->typeCheck()){//target is a directory
+        string targetAbs= dynamic_cast<Directory&>(*target).getAbsolutePath();
+        string pwdAbs = savedPwd->getAbsolutePath();
+        if(pwdAbs.find(targetAbs)==0){
+            cout<<"Can’t remove directory"<<endl;
+            return;}
+    }else {//target is a file
+        string targetAbs = fs.getWorkingDirectory().getAbsolutePath() + "/" + target->getName();
+        string pwdAbs = savedPwd->getAbsolutePath();
+        if (pwdAbs.find(targetAbs) == 0) {
+            cout << "Can’t remove file" << endl;
+            return;
+        }
+    }
     fs.getWorkingDirectory().removeFile(target);
     fs.setWorkingDirectory(savedPwd);
 }
@@ -643,7 +684,11 @@ HistoryCommand::HistoryCommand(string args, const vector<BaseCommand *> &history
 string HistoryCommand::toString() {return "history";}
 void HistoryCommand::execute(FileSystem &fs) {
     for (int i = 0; i <history.size() ; ++i) {
-        cout<<i<<"    "<<history[i]->toString()<<" "<<history[i]->getArgs()<<endl;
+        if(dynamic_cast<ErrorCommand*>(history[i])){
+            cout << i << "    " << history[i]->toString()<< endl;
+        }else {
+            cout << i << "    " << history[i]->toString() << " " << history[i]->getArgs() << endl;
+        }
     }
 }
 
@@ -693,7 +738,9 @@ ErrorCommand::ErrorCommand(string args):BaseCommand(args){};
 string ErrorCommand::toString() {return getArgs();}
 void ErrorCommand::execute(FileSystem &fs) {
     string argument = getArgs();
-
+    int spaceLoc = argument.find(" ");
+    string cmd = argument.substr(0, spaceLoc);
+    cout <<cmd<<": Unknown command"<<endl;
 }
 
 

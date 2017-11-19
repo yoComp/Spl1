@@ -136,9 +136,13 @@ int Directory::getSize() {
 void Directory::copy(const Directory &rhs){
     this->setName(rhs.getName());
     this->parent=rhs.parent;
-
     for (int i = 0; i < rhs.children.size(); ++i) {
-        children.push_back(rhs.children[i]);
+        if(rhs.children[i]->typeCheck()){ //child[i] is a folder
+            children.push_back(new Directory(dynamic_cast<Directory&>(*rhs.children[i])));
+            dynamic_cast<Directory&>(*children[i]).setParent(this);
+        }else{//child[i] is a file
+            children.push_back(new File(rhs.children[i]->getName(), rhs.children[i]->getSize()));
+        }
     }
 }
 void Directory::steal(Directory &rhs){
@@ -156,6 +160,7 @@ void Directory::steal(Directory &rhs){
 void Directory::clean() {
     for (int i = 0; i < children.size(); ++i) {
         children[i]->clean();
+        delete children[i];
     }
     children.clear();
     parent=nullptr;

@@ -30,7 +30,7 @@ FileSystem::FileSystem(const FileSystem &rhs) {
 FileSystem& FileSystem::operator=(const FileSystem &rhs) {
     if(this!=&rhs) {
         delete rootDirectory;
-        rootDirectory = rhs.rootDirectory;
+        rootDirectory = new Directory(*rhs.rootDirectory);
         workingDirectory = rootDirectory;
     }
     return *this;
