@@ -2,9 +2,9 @@
 // Created by yonatan on 11/11/17.
 //
 
-#include "Files.h"
+#include "../include/Files.h"
+#include "../include/GlobalVariables.h"
 #include <algorithm>
-
 
 //BaseFile methods
 BaseFile::BaseFile(string name):name(name){} //Constructor
@@ -29,29 +29,42 @@ bool File::typeCheck() {return false;}
 Directory::Directory(string name, Directory *parent):BaseFile(name),children(),parent(parent){} //Constructor
 Directory::~Directory(){
     clean();
+    if(verbose==1 || verbose==3) {
+        cout << "Directory::~Directory()" << endl;
+    }
 } //Destructor
 Directory::Directory(const Directory &rhs):BaseFile(rhs.getName()){
     copy(rhs);
+    if(verbose==1 || verbose==3) {
+        cout << "Directory::Directory(const Directory &rhs)" << endl;
+    }
 }//Copy Constructor
 Directory& Directory::operator=(const Directory &rhs) {
     if(this!=&rhs){
         clean();
         copy(rhs);
     }
+    if(verbose==1 || verbose==3) {
+        cout << "Directory& Directory::operator=(const Directory &rhs)" << endl;
+    }
     return *this;
 }//Copy assignment operator(=)
 Directory::Directory(Directory &&rhs):BaseFile("temp") {
     steal(rhs);
+    if(verbose==1 || verbose==3) {
+        cout << "Directory::Directory(Directory &&rhs)" << endl;
+    }
 }//Move constructor
 Directory& Directory::operator=(Directory &&rhs) {
     if(this!=&rhs){
         clean();
         steal(rhs);
     }
+    if(verbose==1 || verbose==3) {
+        cout << "Directory& Directory::operator=(Directory &&rhs)" << endl;
+    }
     return *this;
 }//Move assignment operator(=)
-
-//Directory methods
 
 //Directory Methods
 Directory* Directory::getParent() const {
@@ -159,25 +172,16 @@ void Directory::steal(Directory &rhs){
 }
 void Directory::clean() {
     for (int i = 0; i < children.size(); ++i) {
-        children[i]->clean();
-        delete children[i];
+        //if(children[i]->typeCheck()){
+            children[i]->clean();
+         //   delete ((Directory*) &children[i]);
+        //}else {
+            delete children[i];
+        //}
+
     }
     children.clear();
     parent=nullptr;
-}
-void Directory::print(){
-    cout<<"folder: "<<this->getName()<<". ";
-    if(parent!=nullptr) {
-        cout << "Parent: " << this->parent->getName() << "." << endl;
-    }else{ cout<<"parent is NULL!"<<endl;}
-    if(!children.empty()){
-        for(int i=0; i<children.size(); i++){
-            cout<<children[i]->getName()<<"-"<<children[i]->getSize()<<" :: ";
-        }
-    }
-    cout<<endl;
-
-
 }
 bool Directory::typeCheck() {return true;}
 

@@ -2,8 +2,9 @@
 // Created by yonatan on 11/15/17.
 //
 
-#include "Commands.h"
-#include "Files.h"
+#include "../include/Commands.h"
+#include "../include/GlobalVariables.h"
+
 BaseCommand::BaseCommand(string args):args(args) {};//Constructor
 string BaseCommand::getArgs() {
     return args;
@@ -25,20 +26,7 @@ Directory* findChildrenByName(string name, const vector<BaseFile*> &v){
                 else { return nullptr; }
             }
         }
-    }/*
-    if(pwd.getChildren().size() == 0) {
-        return nullptr;
-    }else {
-        vector<BaseFile*> v = pwd.getChildren();
-
-        for (int i = 0; i < pwd.getChildren().size(); ++i) {
-            if(v[i]->getName() == name) {
-                if (v[i]->typeCheck()) { return ((Directory *) &v[i]); }
-                else { return nullptr; }
-            }
-        }
-        return nullptr;
-    }*/
+    }
 }
 PwdCommand::PwdCommand(string args):BaseCommand(args){}; //Constructor
 void PwdCommand::execute(FileSystem &fs) {
@@ -47,14 +35,7 @@ void PwdCommand::execute(FileSystem &fs) {
 string PwdCommand::toString() {return "pwd";}
 
 CdCommand::CdCommand(string args):BaseCommand(args) {}; //Constructor
-/*void CdCommand::execute(FileSystem &fs) {
-    string path = getArgs();
-    if(path[0] == '/') { //absolute path
-        fs.setWorkingDirectory(&fs.getRootDirectory());
-        path = path.substr(1);
-    }
-    changePath(path, fs);
-}*/
+
 void CdCommand::execute(FileSystem &fs) {
     string path = getArgs();
     Directory* pwd = &fs.getWorkingDirectory();
@@ -96,38 +77,6 @@ void CdCommand::execute(FileSystem &fs) {
         }
     }
 }
-/*
-void BaseCommand::changePath(string path, FileSystem &fs) {
-    if (path.length() > 0) {
-        string str = "";
-        int i;
-        for (i = 0; (i < path.length()) && path[i] != '/'; ++i) {
-            str = str + path[i];
-        }
-        if (str == "..") {
-            if (fs.getWorkingDirectory().getParent() == nullptr) {
-                cout << "The system cannot find the path specified" << endl;
-                return;
-            } else {
-                fs.setWorkingDirectory(fs.getWorkingDirectory().getParent());
-                if (i + 1 > path.length()) { i--; }
-                changePath(path.substr(i+1), fs);
-            }
-        } else {
-            Directory *dir = findChildrenByName(str, fs.getWorkingDirectory());
-            if (dir == nullptr) {
-                cout << "The system cannot find the path specified" << endl;
-                return;
-            } else {
-                fs.setWorkingDirectory(dir);
-                if (i + 1 > path.length()) { i--; }
-                path=path.substr(i+1);
-                changePath(path, fs);
-            }
-        }
-    }
-}
-*/
 string CdCommand::toString() { return "cd"; }
 
 void LsCommand::lsPrint(Directory &pwd){
@@ -499,102 +448,6 @@ void MvCommand::execute(FileSystem &fs) {
     }
 }
 
-/*
-void MvCommand::execute(FileSystem &fs) {
-    string argument = getArgs();
-    Directory *mvSrc = &fs.getWorkingDirectory();
-    Directory *mvDest = mvSrc;
-    if (argument[0] == '/') {
-        mvSrc = &fs.getRootDirectory();
-        argument = argument.substr(1);
-    }
-    int spaceLoc = argument.find(" ");
-    string src = argument.substr(0, spaceLoc);
-    string dest = argument.substr(spaceLoc + 1);
-    if (dest[0] == '/') {
-        mvDest = &fs.getRootDirectory();
-        dest = dest.substr(1);
-    }
-
-    while (isPath(src)) {
-        int split = src.find("/");
-        string next = "";
-        for (int i = 0; i < split; ++i) {
-            next += src[i];
-        }
-        src = src.substr(split + 1);
-        if (next == "..") {
-            mvSrc = mvSrc->getParent();
-        } else {
-            Directory *f = findChildrenByName(next, *mvSrc);
-            if (f == nullptr) {
-                cout << "No such file or directory" << endl;
-                return;
-            } else {
-                mvSrc = f;
-            }
-        }
-    }
-    BaseFile *f = findFileByName(src, *mvSrc);
-    if (f == nullptr) {
-        cout << "No such file or directory" << endl;
-        return;
-    }
-    if (f->typeCheck()) {
-        mvSrc = (Directory *) f;
-    }
-    string mvPath = mvSrc->getAbsolutePath();
-    if (!f->typeCheck()) {
-        mvPath += "/" + f->getName();
-    }
-    string pwd = fs.getWorkingDirectory().getAbsolutePath();
-    if (pwd.find(mvPath) == 0) {
-        cout << "Can’t move directory" << endl;
-        return;
-    }
-    if (mvSrc->typeCheck()) {
-        mvSrc = mvSrc->getParent();
-    }
-    //f holds basefile to be moved, mvSrc holds its parent
-    while (isPath(dest)) {
-        int split = dest.find("/");
-        string next = "";
-        for (int i = 0; i < split; ++i) {
-            next += dest[i];
-        }
-        dest = dest.substr(split + 1);
-        if (next == "..") {
-            mvDest = mvDest->getParent();
-        } else {
-            Directory *f = findChildrenByName(next, *mvDest);
-            if (f == nullptr) {
-                cout << "No such file or directory" << endl;
-                return;
-            } else {
-                mvDest = f;
-            }
-        }
-    }//mvDest holds destination's parent
-    Directory *destination = findChildrenByName(dest, *mvDest);
-    if (destination == nullptr) {
-        cout << "No such file or directory" << endl;
-        return;
-    }
-    if (nameExists(f->getName(), *destination)) {
-        return;
-    }
-    if (f->typeCheck()) {//f is a directory
-        Directory *moved((Directory *) f);
-        moved->setParent(destination);
-        destination->addFile(moved);
-        mvSrc->removeFile(
-                f);//If f was moved correctly: deletes f pointer from its original father. else copied and deleted properly from original father.
-    } else {
-        File *moved((File *) f);
-        destination->addFile(moved);
-        mvSrc->removeFile(f);
-    }
-}*/
 RenameCommand::RenameCommand(string args):BaseCommand(args){}; //Constructor
 string RenameCommand::toString() {return "rename";}
 void RenameCommand::execute(FileSystem &fs) {
@@ -654,25 +507,31 @@ void RmCommand::execute(FileSystem &fs) {
 
     string name = command.substr(split+1);
     command=command.substr(0, split);
-
-    CdCommand cd(command);
-    cd.execute(fs);
-
+    if(command!=name){
+        CdCommand cd(command);
+        cd.execute(fs);
+        if(&fs.getWorkingDirectory() == savedPwd){
+            return;
+        }
+    }
     BaseFile* target=findFileByName(name, fs.getWorkingDirectory().getChildren());
     if (target == nullptr){
         cout<<"No such file or Directory"<<endl;
+        fs.setWorkingDirectory(savedPwd);
         return;}
     if(target->typeCheck()){//target is a directory
         string targetAbs= dynamic_cast<Directory&>(*target).getAbsolutePath();
         string pwdAbs = savedPwd->getAbsolutePath();
         if(pwdAbs.find(targetAbs)==0){
             cout<<"Can’t remove directory"<<endl;
+            fs.setWorkingDirectory(savedPwd);
             return;}
     }else {//target is a file
         string targetAbs = fs.getWorkingDirectory().getAbsolutePath() + "/" + target->getName();
         string pwdAbs = savedPwd->getAbsolutePath();
         if (pwdAbs.find(targetAbs) == 0) {
             cout << "Can’t remove file" << endl;
+            fs.setWorkingDirectory(savedPwd);
             return;
         }
     }
@@ -700,7 +559,10 @@ void VerboseCommand::execute(FileSystem &fs) {
     if(input > 3 || input < 0){
         cout<<"Wrong verbose input"<<endl;
         return;}
-
+    if (input == 0){ verbose=0;}
+    else if (input == 1) { verbose=1;}
+    else if (input == 2) { verbose=2;}
+    else { verbose=3;}
 }//Implement this!
 
 ExecCommand::ExecCommand(string args, const vector<BaseCommand *> &history):BaseCommand(args), history(history){}; //Constructor

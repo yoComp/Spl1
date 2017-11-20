@@ -2,7 +2,8 @@
 // Created by yonatan on 11/19/17.
 //
 
-#include "Environment.h"
+#include "../include/Environment.h"
+#include "../include/GlobalVariables.h"
 
 Environment::Environment(): fs(FileSystem()), commandsHistory(){}; //Constructor
 FileSystem& Environment::getFileSystem() {return fs;}
@@ -18,17 +19,25 @@ Environment::~Environment(){
         delete commandsHistory[i];
     }
     commandsHistory.clear();
-    //delete &fs;
+    if(verbose==1 || verbose==3) {
+        cout << "Environment::~Environment()" << endl;
+    }
 }//Destructor
 
 Environment::Environment(const Environment &rhs) {
     fs=FileSystem(rhs.fs);
     commandsHistory=rhs.commandsHistory;
+    if(verbose==1 || verbose==3) {
+        cout << "Environment::Environment(const Environment &rhs)" << endl;
+    }
 }//Copy constructor
 Environment& Environment::operator=(const Environment &rhs) {
     if(this!=&rhs){
         fs=rhs.fs;
         commandsHistory=rhs.commandsHistory;
+    }
+    if(verbose==1 || verbose==3) {
+        cout << "Environment& Environment::operator=(const Environment &rhs)" << endl;
     }
     return *this;
 }//Copy assignment operator
@@ -37,6 +46,9 @@ Environment::Environment(Environment &&rhs) {
     delete &rhs.fs;
     commandsHistory=rhs.commandsHistory;
     rhs.commandsHistory.clear();
+    if(verbose==1 || verbose==3) {
+        cout << "Environment::Environment(Environment &&rhs)" << endl;
+    }
 }//Move construtcor
 Environment& Environment::operator=(Environment &&rhs) {
     if(this!=&rhs){
@@ -44,6 +56,9 @@ Environment& Environment::operator=(Environment &&rhs) {
         delete &rhs.fs;
         commandsHistory=rhs.commandsHistory;
         rhs.commandsHistory.clear();
+    }
+    if(verbose==1 || verbose==3) {
+        cout << "Environment& Environment::operator=(Environment &&rhs)" << endl;
     }
     return *this;
 }//Move assignment operator
@@ -56,16 +71,19 @@ void Environment::start() {
         callToCmd(input);
     }
 }
+
 void Environment::callToCmd(string cmd){
     int spaceLoc = cmd.find(" ");
+    if(verbose==2||verbose==3){
+        if(cmd=="exit"){return;}
+        cout<<cmd<<endl;
+    }
     string args = cmd.substr(spaceLoc+1);
     cmd=cmd.substr(0, spaceLoc);
     if(cmd=="pwd"){
         PwdCommand *pwd= new PwdCommand("");
         pwd->execute(fs);
         addToHistory(pwd);
-    } else if(cmd == "exit") {
-        return;
     }else if(cmd == "ls"){
         if(args == cmd){
             args = "";}
@@ -108,10 +126,12 @@ void Environment::callToCmd(string cmd){
         VerboseCommand *verb = new VerboseCommand(args);
         verb->execute(fs);
         addToHistory(verb);
-    } else if(cmd=="exec"){
+    } else if(cmd=="exec") {
         ExecCommand *exec = new ExecCommand(args, getHistory());
         exec->execute(fs);
         addToHistory(exec);
+    }else if(cmd=="exit"){
+        return;
     } else {
         string fullarg = cmd + " " + args;
         ErrorCommand *err = new ErrorCommand(fullarg);
