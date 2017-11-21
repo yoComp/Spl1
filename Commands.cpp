@@ -54,6 +54,10 @@ void CdCommand::execute(FileSystem &fs) {
         }
         path=path.substr(split+1);
         if(next == ".."){
+            if(pwd==&fs.getRootDirectory()){
+                cout<<"The system cannot find the path specified"<<endl;
+                return;
+            }
             pwd=pwd->getParent();
         }else{
             Directory *f = findChildrenByName(next, pwd->getChildren());
@@ -66,6 +70,10 @@ void CdCommand::execute(FileSystem &fs) {
         }
     }//finished navigating path holds <name> of last dir
     if(path == ".."){
+        if(pwd==&fs.getRootDirectory()){
+            cout<<"The system cannot find the path specified"<<endl;
+            return;
+        }
         fs.setWorkingDirectory(pwd->getParent());
     }else {
         pwd = findChildrenByName(path, pwd->getChildren());
@@ -83,9 +91,9 @@ void LsCommand::lsPrint(Directory &pwd){
     vector<BaseFile*> v = pwd.getChildren();
     for (int i = 0; i < v.size(); ++i) {
         if(v[i]->typeCheck()){
-            cout<<"DIR    "<< v[i]->getName() <<"    "<< v[i]->getSize()<<endl;
+            cout<<"DIR \t"<< v[i]->getName() <<"\t"<< v[i]->getSize()<<endl;
         }else{
-            cout<<"FILE   "<< v[i]->getName() <<"    "<< v[i]->getSize()<<endl;
+            cout<<"FILE\t"<< v[i]->getName() <<"\t"<< v[i]->getSize()<<endl;
         }
     }
 }// Prints out the subdirectories
@@ -105,11 +113,13 @@ void LsCommand::execute(FileSystem &fs) {
         command=command.substr(3);
         CdCommand cd(command);
         cd.execute(fs);
+        if(pwd == &fs.getWorkingDirectory()){return;}
         LsCommand ls("-s");
         ls.execute(fs);
     }else{ //prints sorted by name
         CdCommand cd(command);
         cd.execute(fs);
+        if(pwd == &fs.getWorkingDirectory()){return;}
         LsCommand ls("");
         ls.execute(fs);
     }
@@ -167,14 +177,14 @@ void MkdirCommand::execute(FileSystem &fs) {
                     cout << "Illegal name input" << endl;
                     return;
                 }
+                if(nameExists(next, pwd->getChildren())){
+                    cout<<"The directory already exists"<<endl;
+                    return;
+                }
                 Directory *newDir = new Directory(next, pwd);
                 pwd->addFile(newDir);
                 pwd=newDir;
             } else {
-                if (!nextDir->typeCheck()) {
-                    cout << "The directory already exists" << endl;
-                    return;
-                }
                 pwd = nextDir;
             }
         }
@@ -210,13 +220,8 @@ void MkfileCommand::execute(FileSystem &fs) {
         } else {
             Directory *nextDir = findChildrenByName(next, pwd->getChildren());
             if (nextDir == nullptr) {//create subfolder to continue
-                if (!nameCheck(next)) {
-                    cout << "Illegal name input" << endl;
-                    return;
-                }/*
-                Directory *newDir = new Directory(next, pwd);
-                pwd->addFile(newDir);
-                pwd=newDir;*/
+                cout<<"The system cannot find the path specified"<<endl;
+                return;
             } else {
                 if (!nextDir->typeCheck()) {
                     cout << "The directory already exists" << endl;
@@ -227,10 +232,7 @@ void MkfileCommand::execute(FileSystem &fs) {
         }
     }//finished navigating path holds <name> <size>
     int spaceLoc = path.find(" ");
-    string fname="";
-    for (int j = 0; j < spaceLoc; ++j) {
-        fname+=path[j];
-    }
+    string fname=path.substr(0,spaceLoc);
     string fsize=path.substr(spaceLoc+1);
     int size=stoi(fsize);
     if(!nameCheck(fname)){
@@ -282,6 +284,10 @@ void CpCommand::execute(FileSystem &fs) {
         }
         srcPath=srcPath.substr(split+1);
         if(next == ".."){
+            if(src==&fs.getRootDirectory()){
+                cout<<"No such file or directory"<<endl;
+                return;
+            }
             src=src->getParent();
         }else{
             Directory *f = findChildrenByName(next, src->getChildren());
@@ -301,6 +307,10 @@ void CpCommand::execute(FileSystem &fs) {
         }
         destPath=destPath.substr(split+1);
         if(next == ".."){
+            if(dest==&fs.getRootDirectory()){
+                cout<<"No such file or directory"<<endl;
+                return;
+            }
             dest=dest->getParent();
         }else{
             Directory *f = findChildrenByName(next, dest->getChildren());
@@ -313,12 +323,22 @@ void CpCommand::execute(FileSystem &fs) {
         }
     }//dest = target file/directory's parent
     if(destPath.length()>0) {
-        Directory *f = findChildrenByName(destPath, dest->getChildren());
-        if (f == nullptr) {
-            cout << "No such file or directory" << endl;
-            return;
-        } else {
-            dest = f;
+        if(destPath==".."){
+            if(dest==&fs.getRootDirectory()){
+                cout<<"No such file or directory"<<endl;
+                return;
+            }
+            dest=dest->getParent();
+            destPath="";
+        }
+        if(destPath!="") {
+            Directory *f = findChildrenByName(destPath, dest->getChildren());
+            if (f == nullptr) {
+                cout << "No such file or directory" << endl;
+                return;
+            } else {
+                dest = f;
+            }
         }
     }//dest = target folder to copy in to
     BaseFile *toCopy = findFileByName(srcPath, src->getChildren());
@@ -327,7 +347,7 @@ void CpCommand::execute(FileSystem &fs) {
         return;
     }else{
         if(nameExists(toCopy->getName(), dest->getChildren())){
-            cout<<"File with given name already exists"<<endl;
+            //cout<<"File with given name already exists"<<endl;
             return; }
         if(toCopy->typeCheck()){//toCopy is a directory, deep copy needed
             Directory *dir = new Directory(dynamic_cast<Directory&>(*toCopy));
@@ -365,6 +385,10 @@ void MvCommand::execute(FileSystem &fs) {
         }
         srcPath = srcPath.substr(split + 1);
         if (next == "..") {
+            if(src==&fs.getRootDirectory()){
+                cout<<"No such file or directory"<<endl;
+                return;
+            }
             src = src->getParent();
         } else {
             Directory *f = findChildrenByName(next, src->getChildren());
@@ -384,8 +408,19 @@ void MvCommand::execute(FileSystem &fs) {
         }
         destPath = destPath.substr(split + 1);
         if (next == "..") {
+            if(dest==&fs.getRootDirectory()){
+                cout<<"No such file or directory"<<endl;
+                return;
+            }
             dest = dest->getParent();
         } else {
+            if(destPath==".."){
+                if(dest==&fs.getRootDirectory()){
+                    cout<<"No such file or directory"<<endl;
+                    return;
+                }
+                dest = dest->getParent();
+            }
             Directory *f = findChildrenByName(next, dest->getChildren());
             if (f == nullptr) {
                 cout << "No such file or directory" << endl;
@@ -396,14 +431,28 @@ void MvCommand::execute(FileSystem &fs) {
         }
     }//dest = target file/directory's parent
     if (destPath.length() > 0) {
-        Directory *f = findChildrenByName(destPath, dest->getChildren());
-        if (f == nullptr) {
-            cout << "No such file or directory" << endl;
-            return;
-        } else {
-            dest = f;
+        if(destPath==".."){
+            if(dest==&fs.getRootDirectory()){
+                cout<<"Can’t move directory"<<endl;
+                return;
+            }
+            dest=dest->getParent();
+            destPath="";
+        }
+        if(destPath!="") {
+            Directory *f = findChildrenByName(destPath, dest->getChildren());
+            if (f == nullptr) {
+                cout << "No such file or directory" << endl;
+                return;
+            } else {
+                dest = f;
+            }
         }
     }//dest = target folder to be moved to
+    if(srcPath==".."){
+        cout<<"Can't move directory"<<endl;
+        return;
+    }
     BaseFile *toMove = findFileByName(srcPath, src->getChildren());
     if (toMove == nullptr) {
         cout << "No such file or directory" << endl;
@@ -423,7 +472,7 @@ void MvCommand::execute(FileSystem &fs) {
                 return;}
         }
         if (nameExists(toMove->getName(), dest->getChildren())) {
-            cout << "File with given name already exists" << endl;
+            //cout << "File with given name already exists" << endl;
             return;
         }
         if (toMove->typeCheck()) {//toMove is a directory, deep steal needed
@@ -489,7 +538,7 @@ void RenameCommand::execute(FileSystem &fs) {
         cout<<"Illegal name input"<<endl;
         return;}
     if(nameExists(newName, target->getChildren())){
-        cout<<"File with that name already exists"<<endl;
+        //cout<<"File with that name already exists"<<endl;
         return;}
     if(file==&fs.getWorkingDirectory()){
         cout<<"Can't rename the working directory"<<endl;
@@ -502,6 +551,10 @@ string RmCommand::toString() {return "rm";}
 void RmCommand::execute(FileSystem &fs) {
     Directory* savedPwd = &fs.getWorkingDirectory();
     string command = getArgs();
+    if(&fs.getRootDirectory()==savedPwd && command=="/"){
+        cout<<"Can't remove directory"<<endl;
+        return;
+    }
 
     int split = command.find_last_of("/");
 
@@ -516,7 +569,7 @@ void RmCommand::execute(FileSystem &fs) {
     }
     BaseFile* target=findFileByName(name, fs.getWorkingDirectory().getChildren());
     if (target == nullptr){
-        cout<<"No such file or Directory"<<endl;
+        cout<<"No such file or directory"<<endl;
         fs.setWorkingDirectory(savedPwd);
         return;}
     if(target->typeCheck()){//target is a directory
@@ -544,9 +597,9 @@ string HistoryCommand::toString() {return "history";}
 void HistoryCommand::execute(FileSystem &fs) {
     for (int i = 0; i <history.size() ; ++i) {
         if(dynamic_cast<ErrorCommand*>(history[i])){
-            cout << i << "    " << history[i]->toString()<< endl;
+            cout << i << "\t" << history[i]->toString()<< endl;
         }else {
-            cout << i << "    " << history[i]->toString() << " " << history[i]->getArgs() << endl;
+            cout << i << "\t" << history[i]->toString() << " " << history[i]->getArgs() << endl;
         }
     }
 }

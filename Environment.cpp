@@ -133,8 +133,8 @@ void Environment::callToCmd(string cmd){
     }else if(cmd=="exit"){
         return;
     } else {
-        string fullarg = cmd + " " + args;
-        ErrorCommand *err = new ErrorCommand(fullarg);
+        string fullArg = cmd + " " + args;
+        ErrorCommand *err = new ErrorCommand(fullArg);
         err->execute(fs);
         addToHistory(err);
     }

@@ -172,15 +172,10 @@ void Directory::steal(Directory &rhs){
 }
 void Directory::clean() {
     for (int i = 0; i < children.size(); ++i) {
-        //if(children[i]->typeCheck()){
-            children[i]->clean();
-         //   delete ((Directory*) &children[i]);
-        //}else {
-            delete children[i];
-        //}
-
+        children[i]->clean();
+        delete children[i];
     }
-    children.clear();
+    children=vector<BaseFile*>();
     parent=nullptr;
 }
 bool Directory::typeCheck() {return true;}

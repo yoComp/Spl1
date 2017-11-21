@@ -14,9 +14,6 @@ public:
 	string getArgs();
 	virtual void execute(FileSystem & fs) = 0;
 	virtual string toString() = 0;
-
-
-	void changePath(string path, FileSystem &fs);
 };
 
 class PwdCommand : public BaseCommand {
