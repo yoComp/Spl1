@@ -33,7 +33,7 @@ Directory::~Directory(){
         cout << "Directory::~Directory()" << endl;
     }
 } //Destructor
-Directory::Directory(const Directory &rhs):BaseFile(rhs.getName()){
+Directory::Directory(const Directory &rhs):BaseFile(rhs.getName()), children(),parent(nullptr){
     copy(rhs);
     if(verbose==1 || verbose==3) {
         cout << "Directory::Directory(const Directory &rhs)" << endl;
@@ -49,7 +49,7 @@ Directory& Directory::operator=(const Directory &rhs) {
     }
     return *this;
 }//Copy assignment operator(=)
-Directory::Directory(Directory &&rhs):BaseFile("temp") {
+Directory::Directory(Directory &&rhs):BaseFile("temp"), children(), parent(nullptr) {
     steal(rhs);
     if(verbose==1 || verbose==3) {
         cout << "Directory::Directory(Directory &&rhs)" << endl;
@@ -74,7 +74,7 @@ void Directory::setParent(Directory *newParent) {
     parent=newParent;
 }
 void Directory::addFile(BaseFile *file) {
-    for(int i=0; i<children.size(); i++){
+    for(size_t i=0; i<children.size(); i++){
         if(children[i]->getName()==file->getName()){
             return;
         }
@@ -85,7 +85,7 @@ void Directory::addFile(BaseFile *file) {
     }
 }
 void Directory::removeFile(string name) {
-    for (int i = 0; i < children.size(); ++i) {
+    for (size_t i = 0; i < children.size(); ++i) {
         if(children[i]->getName()==name){
             children[i]->clean();
             delete children[i];
@@ -95,7 +95,7 @@ void Directory::removeFile(string name) {
     }
 }
 void Directory::removeFile(BaseFile *file) {
-    for(int i=0; i<children.size(); i++){
+    for(size_t i=0; i<children.size(); i++){
         if(children[i] == file){
             children[i]->clean();
             delete children[i];
@@ -135,7 +135,7 @@ void Directory::sortBySize() {
 }
 int Directory::getSize() {
     int sum=0;
-    for (int i = 0; i < children.size(); ++i) {
+    for (size_t i = 0; i < children.size(); ++i) {
         if(dynamic_cast<Directory*>(children[i])){
             sum=sum+(dynamic_cast<Directory*>(children[i])->getSize());
         }else{
@@ -149,7 +149,7 @@ int Directory::getSize() {
 void Directory::copy(const Directory &rhs){
     this->setName(rhs.getName());
     this->parent=rhs.parent;
-    for (int i = 0; i < rhs.children.size(); ++i) {
+    for (size_t i = 0; i < rhs.children.size(); ++i) {
         if(rhs.children[i]->typeCheck()){ //child[i] is a folder
             children.push_back(new Directory(dynamic_cast<Directory&>(*rhs.children[i])));
             dynamic_cast<Directory&>(*children[i]).setParent(this);
@@ -163,7 +163,7 @@ void Directory::steal(Directory &rhs){
     rhs.setName("void");
     this->parent=rhs.parent;
     rhs.parent=nullptr;
-    for(int i=0; i<children.size(); i++){
+    for(size_t i=0; i<children.size(); i++){
         children[i]->clean();
     }
     children.clear();
@@ -171,7 +171,7 @@ void Directory::steal(Directory &rhs){
     rhs.children=vector<BaseFile*>();
 }
 void Directory::clean() {
-    for (int i = 0; i < children.size(); ++i) {
+    for (size_t i = 0; i < children.size(); ++i) {
         children[i]->clean();
         delete children[i];
     }

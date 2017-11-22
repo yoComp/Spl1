@@ -27,9 +27,8 @@ FileSystem::~FileSystem() {
         cout << "FileSystem::~Filesystem()" << endl;
     }
 } //Destructor
-FileSystem::FileSystem(const FileSystem &rhs) {
-    delete rootDirectory;
-    rootDirectory=new Directory(*rhs.rootDirectory);
+FileSystem::FileSystem(const FileSystem &rhs): rootDirectory(new Directory(*rhs.rootDirectory)), workingDirectory(nullptr) {
+    //rootDirectory=new Directory(*rhs.rootDirectory);
     string absPath = rhs.getWorkingDirectory().getAbsolutePath();
     CdCommand cd (absPath);
     cd.execute(*this);
@@ -50,9 +49,8 @@ FileSystem& FileSystem::operator=(const FileSystem &rhs) {
     }
     return *this;
 }//Copy assignment operator
-FileSystem::FileSystem(FileSystem &&rhs) {
-    delete rootDirectory;
-    rootDirectory=rhs.rootDirectory;
+FileSystem::FileSystem(FileSystem &&rhs): rootDirectory(rhs.rootDirectory), workingDirectory(nullptr){
+    //rootDirectory=rhs.rootDirectory;
     string absPath = rhs.getWorkingDirectory().getAbsolutePath();
     CdCommand cd (absPath);
     cd.execute(*this);

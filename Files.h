@@ -19,6 +19,8 @@ public:
     virtual bool typeCheck() = 0;
 	virtual void clean(){};
 
+	virtual ~BaseFile(){};
+
 	void print(){cout<<"BaseFile: "<<name<<"."<<endl;}
 
 };
@@ -31,6 +33,7 @@ public:
 	File(string name, int size); // Constructor
 	int getSize(); // Return the size of the file
     bool typeCheck();
+    virtual ~File(){};
 
 
 	void print(){cout<<"File: "<<getName()<<", size: "<<getSize()<<"."<<endl;}

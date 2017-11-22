@@ -20,13 +20,14 @@ Directory* findChildrenByName(string name, const vector<BaseFile*> &v){
     if (v.size() == 0){
         return nullptr;
     }else{
-        for (int i = 0; i < v.size(); i++) {
+        for (size_t i = 0; i < v.size(); i++) {
             if(v[i]->getName()==name) {
                 if (v[i]->typeCheck()) { return dynamic_cast<Directory *>(v[i]); }
                 else { return nullptr; }
             }
         }
     }
+    return nullptr;
 }
 PwdCommand::PwdCommand(string args):BaseCommand(args){}; //Constructor
 void PwdCommand::execute(FileSystem &fs) {
@@ -89,7 +90,7 @@ string CdCommand::toString() { return "cd"; }
 
 void LsCommand::lsPrint(Directory &pwd){
     vector<BaseFile*> v = pwd.getChildren();
-    for (int i = 0; i < v.size(); ++i) {
+    for (size_t i = 0; i < v.size(); ++i) {
         if(v[i]->typeCheck()){
             cout<<"DIR \t"<< v[i]->getName() <<"\t"<< v[i]->getSize()<<endl;
         }else{
@@ -132,9 +133,9 @@ bool nameCheck(string name){
     bool valid;
     if(name.length()==0){ return false;}
     string legal ="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    for(int i=0; i<name.length(); i++){
+    for(size_t i=0; i<name.length(); i++){
         valid=false;
-        for(int j=0; j<legal.length() && !valid; j++){
+        for(size_t j=0; j<legal.length() && !valid; j++){
             if(name[i]==legal[j]){
                 valid = true;
             }
@@ -144,7 +145,7 @@ bool nameCheck(string name){
     return true;
 } //name is valid: a-z, A-Z, 0-9 chars only
 bool nameExists(string name, const vector<BaseFile*> &v){
-    for (int i = 0; i < v.size(); ++i) {
+    for (size_t i = 0; i < v.size(); ++i) {
         if(v[i]->getName()==name){
             return true;
         }
@@ -250,7 +251,7 @@ BaseFile* findFileByName(string name, const vector<BaseFile*> &v){
     if(v.size() == 0) {
         return nullptr;
     }else {
-        for (int i = 0; i < v.size(); ++i) {
+        for (size_t i = 0; i < v.size(); ++i) {
             if(v[i]->getName() == name) {
                  return v[i];
             }
@@ -595,7 +596,7 @@ void RmCommand::execute(FileSystem &fs) {
 HistoryCommand::HistoryCommand(string args, const vector<BaseCommand *> &history):BaseCommand(args), history(history){}; //Constructor
 string HistoryCommand::toString() {return "history";}
 void HistoryCommand::execute(FileSystem &fs) {
-    for (int i = 0; i <history.size() ; ++i) {
+    for (size_t i = 0; i <history.size() ; ++i) {
         if(dynamic_cast<ErrorCommand*>(history[i])){
             cout << i << "\t" << history[i]->toString()<< endl;
         }else {
@@ -626,7 +627,7 @@ void ExecCommand::execute(FileSystem &fs) {
         cout<<"Illegal input"<<endl;
         return;}
     int cmdNum = stoi(argument);
-    if(cmdNum<0 || cmdNum>history.size()){
+    if(cmdNum<0 || (size_t)cmdNum>history.size()){
         cout<<"Command not found"<<endl;
         return;}
     BaseCommand* cmd = history[cmdNum];
@@ -636,9 +637,9 @@ bool ExecCommand::execCmdCheck(string arg){
     bool valid;
     if(arg.length()==0){ return false;}
     string legal ="0123456789";
-    for(int i=0; i<arg.length(); i++){
+    for(size_t i=0; i<arg.length(); i++){
         valid=false;
-        for(int j=0; j<legal.length() && !valid; j++){
+        for(size_t j=0; j<legal.length() && !valid; j++){
             if(arg[i]==legal[j]){
                 valid = true;
             }

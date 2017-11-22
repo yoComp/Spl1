@@ -39,4 +39,4 @@ bin/Environment.o: src/Environment.cpp include/Environment.h
 
 #Clean the build directory and executable
 clean: 
-	rm -f bin/*.o bin/Assignment_1
+	rm -f bin/*

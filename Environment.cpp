@@ -5,7 +5,7 @@
 #include "../include/Environment.h"
 #include "../include/GlobalVariables.h"
 
-Environment::Environment(): fs(FileSystem()), commandsHistory(){}; //Constructor
+Environment::Environment(): commandsHistory(), fs(FileSystem()){}; //Constructor
 FileSystem& Environment::getFileSystem() {return fs;}
 const vector<BaseCommand*>& Environment::getHistory() const {return commandsHistory;}
 void Environment::addToHistory(BaseCommand *command) {
@@ -15,7 +15,7 @@ void Environment::addToHistory(BaseCommand *command) {
 //Rule of 5 implementation
 
 Environment::~Environment(){
-    for (int i = 0; i < commandsHistory.size(); ++i) {
+    for (size_t i = 0; i < commandsHistory.size(); ++i) {
         delete commandsHistory[i];
     }
     commandsHistory.clear();
@@ -24,9 +24,9 @@ Environment::~Environment(){
     }
 }//Destructor
 
-Environment::Environment(const Environment &rhs) {
-    fs=FileSystem(rhs.fs);
-    commandsHistory=rhs.commandsHistory;
+Environment::Environment(const Environment &rhs): commandsHistory(rhs.commandsHistory),fs(FileSystem(rhs.fs)){
+    //fs=FileSystem(rhs.fs);
+    //commandsHistory=rhs.commandsHistory;
     if(verbose==1 || verbose==3) {
         cout << "Environment::Environment(const Environment &rhs)" << endl;
     }
@@ -41,10 +41,10 @@ Environment& Environment::operator=(const Environment &rhs) {
     }
     return *this;
 }//Copy assignment operator
-Environment::Environment(Environment &&rhs) {
-    fs=rhs.fs;
+Environment::Environment(Environment &&rhs):commandsHistory(rhs.commandsHistory),fs(rhs.fs) {
+    //fs=rhs.fs;
     delete &rhs.fs;
-    commandsHistory=rhs.commandsHistory;
+    //commandsHistory=rhs.commandsHistory;
     rhs.commandsHistory.clear();
     if(verbose==1 || verbose==3) {
         cout << "Environment::Environment(Environment &&rhs)" << endl;

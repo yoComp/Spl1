@@ -13,6 +13,7 @@ class Environment {
 private:
 	vector<BaseCommand*> commandsHistory;
 	FileSystem fs;
+
 	void callToCmd(string command);
 
 public:
