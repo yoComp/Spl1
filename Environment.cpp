@@ -24,9 +24,10 @@ Environment::~Environment(){
     }
 }//Destructor
 
-Environment::Environment(const Environment &rhs): commandsHistory(rhs.commandsHistory),fs(FileSystem(rhs.fs)){
-    //fs=FileSystem(rhs.fs);
-    //commandsHistory=rhs.commandsHistory;
+Environment::Environment(const Environment &rhs): commandsHistory(),fs(FileSystem(rhs.fs)){
+    for(size_t i=0; i<rhs.commandsHistory.size(); ++i){
+        commandsHistory.push_back(rhs.commandsHistory[i]->clone());
+    }
     if(verbose==1 || verbose==3) {
         cout << "Environment::Environment(const Environment &rhs)" << endl;
     }
@@ -34,28 +35,27 @@ Environment::Environment(const Environment &rhs): commandsHistory(rhs.commandsHi
 Environment& Environment::operator=(const Environment &rhs) {
     if(this!=&rhs){
         fs=rhs.fs;
-        commandsHistory=rhs.commandsHistory;
+        for(size_t i=0; i<rhs.commandsHistory.size(); ++i){
+            commandsHistory.push_back(rhs.commandsHistory[i]->clone());
+        }
     }
     if(verbose==1 || verbose==3) {
         cout << "Environment& Environment::operator=(const Environment &rhs)" << endl;
     }
     return *this;
 }//Copy assignment operator
-Environment::Environment(Environment &&rhs):commandsHistory(rhs.commandsHistory),fs(rhs.fs) {
-    //fs=rhs.fs;
-    delete &rhs.fs;
-    //commandsHistory=rhs.commandsHistory;
-    rhs.commandsHistory.clear();
+Environment::Environment(Environment &&rhs):commandsHistory(move(rhs.commandsHistory)),fs(move(rhs.fs)) {
+    rhs.commandsHistory=vector<BaseCommand*>();
     if(verbose==1 || verbose==3) {
         cout << "Environment::Environment(Environment &&rhs)" << endl;
     }
 }//Move construtcor
 Environment& Environment::operator=(Environment &&rhs) {
     if(this!=&rhs){
-        fs=rhs.fs;
-        delete &rhs.fs;
-        commandsHistory=rhs.commandsHistory;
-        rhs.commandsHistory.clear();
+        fs=move(rhs.fs);
+        //delete &rhs.fs;
+        commandsHistory=move(rhs.commandsHistory);
+        //rhs.commandsHistory.clear();
     }
     if(verbose==1 || verbose==3) {
         cout << "Environment& Environment::operator=(Environment &&rhs)" << endl;

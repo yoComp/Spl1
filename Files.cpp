@@ -167,8 +167,8 @@ void Directory::steal(Directory &rhs){
         children[i]->clean();
     }
     children.clear();
-    children=rhs.children;
-    rhs.children=vector<BaseFile*>();
+    children=move(rhs.children);
+    //rhs.children=vector<BaseFile*>();
 }
 void Directory::clean() {
     for (size_t i = 0; i < children.size(); ++i) {

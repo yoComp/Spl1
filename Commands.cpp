@@ -29,14 +29,17 @@ Directory* findChildrenByName(string name, const vector<BaseFile*> &v){
     }
     return nullptr;
 }
+
 PwdCommand::PwdCommand(string args):BaseCommand(args){}; //Constructor
 void PwdCommand::execute(FileSystem &fs) {
     cout<< fs.getWorkingDirectory().getAbsolutePath()<<endl;
 }
 string PwdCommand::toString() {return "pwd";}
+BaseCommand* PwdCommand::clone() {
+    return new PwdCommand(getArgs());
+}
 
 CdCommand::CdCommand(string args):BaseCommand(args) {}; //Constructor
-
 void CdCommand::execute(FileSystem &fs) {
     string path = getArgs();
     Directory* pwd = &fs.getWorkingDirectory();
@@ -87,12 +90,16 @@ void CdCommand::execute(FileSystem &fs) {
     }
 }
 string CdCommand::toString() { return "cd"; }
+BaseCommand* CdCommand::clone() {
+    return new CdCommand(getArgs());
+}
+
 
 void LsCommand::lsPrint(Directory &pwd){
     vector<BaseFile*> v = pwd.getChildren();
     for (size_t i = 0; i < v.size(); ++i) {
         if(v[i]->typeCheck()){
-            cout<<"DIR \t"<< v[i]->getName() <<"\t"<< v[i]->getSize()<<endl;
+            cout<<"DIR\t"<< v[i]->getName() <<"\t"<< v[i]->getSize()<<endl;
         }else{
             cout<<"FILE\t"<< v[i]->getName() <<"\t"<< v[i]->getSize()<<endl;
         }
@@ -127,6 +134,9 @@ void LsCommand::execute(FileSystem &fs) {
     fs.setWorkingDirectory(pwd);
 }
 string LsCommand::toString() {return "ls";};
+BaseCommand* LsCommand::clone() {
+    return new LsCommand(getArgs());
+}
 
 
 bool nameCheck(string name){
@@ -199,6 +209,9 @@ void MkdirCommand::execute(FileSystem &fs) {
     Directory *dir=new Directory(path, pwd);
     pwd->addFile(dir);
 }
+BaseCommand* MkdirCommand::clone() {
+    return new MkdirCommand(getArgs());
+}
 
 MkfileCommand::MkfileCommand(string args):BaseCommand(args) {};//Constructor
 string MkfileCommand::toString() {return "mkfile";};
@@ -247,6 +260,10 @@ void MkfileCommand::execute(FileSystem &fs) {
     File *f = new File(fname, size);
     pwd->addFile(f);
 }
+BaseCommand* MkfileCommand::clone() {
+    return new MkfileCommand(getArgs());
+}
+
 BaseFile* findFileByName(string name, const vector<BaseFile*> &v){
     if(v.size() == 0) {
         return nullptr;
@@ -259,6 +276,7 @@ BaseFile* findFileByName(string name, const vector<BaseFile*> &v){
         return nullptr;
     }
 }
+
 
 CpCommand::CpCommand(string args):BaseCommand(args){};//Constructor
 string CpCommand::toString() {return "cp";}
@@ -359,7 +377,9 @@ void CpCommand::execute(FileSystem &fs) {
         }
     }
 }
-
+BaseCommand* CpCommand::clone() {
+    return new CpCommand(getArgs());
+}
 
 MvCommand::MvCommand(string args):BaseCommand(args) {};//Constructor
 string MvCommand::toString() {return "mv";}
@@ -434,7 +454,7 @@ void MvCommand::execute(FileSystem &fs) {
     if (destPath.length() > 0) {
         if(destPath==".."){
             if(dest==&fs.getRootDirectory()){
-                cout<<"Can’t move directory"<<endl;
+                cout<<"Can't move directory"<<endl;
                 return;
             }
             dest=dest->getParent();
@@ -463,13 +483,13 @@ void MvCommand::execute(FileSystem &fs) {
             string toMoveAbs= dynamic_cast<Directory&>(*toMove).getAbsolutePath();
             string pwdAbs = fs.getWorkingDirectory().getAbsolutePath();
             if(pwdAbs.find(toMoveAbs)==0){
-                cout<<"Can’t move directory"<<endl;
+                cout<<"Can't move directory"<<endl;
                 return;}
         }else{//toMove is a file
             string toMoveAbs= src->getAbsolutePath() + "/" + toMove->getName();
             string pwdAbs = fs.getWorkingDirectory().getAbsolutePath();
             if(pwdAbs.find(toMoveAbs)==0){
-                cout<<"Can’t move directory"<<endl;
+                cout<<"Can't move directory"<<endl;
                 return;}
         }
         if (nameExists(toMove->getName(), dest->getChildren())) {
@@ -477,15 +497,6 @@ void MvCommand::execute(FileSystem &fs) {
             return;
         }
         if (toMove->typeCheck()) {//toMove is a directory, deep steal needed
-            /*
-            Directory *moved = new Directory(toMove->getName(), dest);
-
-            vector<BaseFile*> v = (dynamic_cast<Directory&>(*toMove).getChildren());
-            for (int i = 0; i < v.size(); ++i) {
-                moved->addFile(v[i]);
-            }
-             */
-
             Directory *moved = new Directory(dynamic_cast<Directory&>(*toMove));
             moved->setParent(dest);
             dest->addFile(moved);
@@ -496,6 +507,9 @@ void MvCommand::execute(FileSystem &fs) {
             dest->addFile(file);
         }
     }
+}
+BaseCommand* MvCommand::clone() {
+    return new MvCommand(getArgs());
 }
 
 RenameCommand::RenameCommand(string args):BaseCommand(args){}; //Constructor
@@ -546,6 +560,9 @@ void RenameCommand::execute(FileSystem &fs) {
         return;}
     file->setName(newName);
 }
+BaseCommand* RenameCommand::clone() {
+    return new RenameCommand(getArgs());
+}
 
 RmCommand::RmCommand(string args):BaseCommand(args){}; //Constructor
 string RmCommand::toString() {return "rm";}
@@ -577,20 +594,23 @@ void RmCommand::execute(FileSystem &fs) {
         string targetAbs= dynamic_cast<Directory&>(*target).getAbsolutePath();
         string pwdAbs = savedPwd->getAbsolutePath();
         if(pwdAbs.find(targetAbs)==0){
-            cout<<"Can’t remove directory"<<endl;
+            cout<<"Can't remove directory"<<endl;
             fs.setWorkingDirectory(savedPwd);
             return;}
     }else {//target is a file
         string targetAbs = fs.getWorkingDirectory().getAbsolutePath() + "/" + target->getName();
         string pwdAbs = savedPwd->getAbsolutePath();
         if (pwdAbs.find(targetAbs) == 0) {
-            cout << "Can’t remove file" << endl;
+            cout << "Can't remove file" << endl;
             fs.setWorkingDirectory(savedPwd);
             return;
         }
     }
     fs.getWorkingDirectory().removeFile(target);
     fs.setWorkingDirectory(savedPwd);
+}
+BaseCommand* RmCommand::clone() {
+    return new RmCommand(getArgs());
 }
 
 HistoryCommand::HistoryCommand(string args, const vector<BaseCommand *> &history):BaseCommand(args), history(history){}; //Constructor
@@ -603,6 +623,9 @@ void HistoryCommand::execute(FileSystem &fs) {
             cout << i << "\t" << history[i]->toString() << " " << history[i]->getArgs() << endl;
         }
     }
+}
+BaseCommand* HistoryCommand::clone() {
+    return new HistoryCommand(getArgs(), vector<BaseCommand*>());
 }
 
 VerboseCommand::VerboseCommand(string args):BaseCommand(args){}; //Constructor
@@ -618,6 +641,9 @@ void VerboseCommand::execute(FileSystem &fs) {
     else if (input == 2) { verbose=2;}
     else { verbose=3;}
 }//Implement this!
+BaseCommand* VerboseCommand::clone() {
+    return new VerboseCommand(getArgs());
+}
 
 ExecCommand::ExecCommand(string args, const vector<BaseCommand *> &history):BaseCommand(args), history(history){}; //Constructor
 string ExecCommand::toString() {return "exec";}
@@ -648,6 +674,10 @@ bool ExecCommand::execCmdCheck(string arg){
     }
     return true;
 }
+BaseCommand* ExecCommand::clone() {
+    return new ExecCommand(getArgs(), vector<BaseCommand*>());
+}
+
 
 
 ErrorCommand::ErrorCommand(string args):BaseCommand(args){};
@@ -657,6 +687,9 @@ void ErrorCommand::execute(FileSystem &fs) {
     int spaceLoc = argument.find(" ");
     string cmd = argument.substr(0, spaceLoc);
     cout <<cmd<<": Unknown command"<<endl;
+}
+BaseCommand* ErrorCommand::clone() {
+    return new ErrorCommand(getArgs());
 }
 
 

@@ -15,6 +15,7 @@ public:
 	virtual void execute(FileSystem & fs) = 0;
 	virtual string toString() = 0;
     virtual ~BaseCommand(){};
+	virtual BaseCommand* clone() = 0;
 };
 
 class PwdCommand : public BaseCommand {
@@ -24,6 +25,8 @@ public:
 	void execute(FileSystem & fs); // Every derived class should implement this function according to the document (pdf)
 	virtual string toString();
     virtual ~PwdCommand(){};
+
+	BaseCommand *clone();
 };
 
 class CdCommand : public BaseCommand {
@@ -33,6 +36,8 @@ public:
 	void execute(FileSystem & fs);
 	string toString();
     virtual ~CdCommand(){};
+
+	BaseCommand *clone();
 };
 
 class LsCommand : public BaseCommand {
@@ -43,6 +48,8 @@ public:
 	void execute(FileSystem & fs);
 	string toString();
     virtual ~LsCommand(){};
+
+	BaseCommand *clone();
 };
 
 class MkdirCommand : public BaseCommand {
@@ -52,6 +59,8 @@ public:
 	void execute(FileSystem & fs);
 	string toString();
     virtual ~MkdirCommand(){};
+
+	BaseCommand *clone();
 };
 
 class MkfileCommand : public BaseCommand {
@@ -61,6 +70,8 @@ public:
 	void execute(FileSystem & fs);
 	string toString();
     virtual ~MkfileCommand(){};
+
+	BaseCommand *clone();
 };
 
 class CpCommand : public BaseCommand {
@@ -70,6 +81,8 @@ public:
 	void execute(FileSystem & fs);
 	string toString();
     virtual ~CpCommand(){};
+
+	BaseCommand *clone();
 };
 
 class MvCommand : public BaseCommand {
@@ -79,6 +92,8 @@ public:
 	void execute(FileSystem & fs);
 	string toString();
     virtual ~MvCommand(){};
+
+	BaseCommand *clone();
 };
 
 class RenameCommand : public BaseCommand {
@@ -88,6 +103,8 @@ public:
 	void execute(FileSystem & fs);
 	string toString();
     virtual ~RenameCommand(){};
+
+	BaseCommand *clone();
 };
 
 class RmCommand : public BaseCommand {
@@ -97,6 +114,8 @@ public:
 	void execute(FileSystem & fs);
 	string toString();
     virtual ~RmCommand(){};
+
+	BaseCommand *clone();
 };
 
 class HistoryCommand : public BaseCommand {
@@ -107,6 +126,8 @@ public:
 	void execute(FileSystem & fs);
 	string toString();
     virtual ~HistoryCommand(){};
+
+	BaseCommand *clone();
 };
 
 class VerboseCommand : public BaseCommand {
@@ -116,6 +137,8 @@ public:
 	void execute(FileSystem & fs);
 	string toString();
     virtual ~VerboseCommand(){};
+
+	BaseCommand *clone();
 };
 
 class ErrorCommand : public BaseCommand {
@@ -125,6 +148,8 @@ public:
 	void execute(FileSystem & fs);
 	string toString();
     virtual ~ErrorCommand(){};
+
+	BaseCommand *clone();
 };
 
 class ExecCommand : public BaseCommand {
@@ -136,6 +161,8 @@ public:
 	void execute(FileSystem & fs);
 	string toString();
     virtual ~ExecCommand(){};
+
+	BaseCommand *clone();
 };
 
 
